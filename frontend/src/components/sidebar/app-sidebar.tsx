@@ -18,6 +18,7 @@ import { getSidebarItems } from "@/shared/data/sidebarItem";
 import { Label } from "../ui/label";
 import { useAppSidebar } from "./useAppSidebar";
 import useGetTenant from "@/hooks/use-get-tenant";
+import { cn } from "@/lib/utils";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isActive } = useAppSidebar();
@@ -44,8 +45,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <SidebarMenuSubItem key={item.title}>
                         <SidebarMenuSubButton asChild isActive={isActive(item)}>
                           <Link
-                            href={item.url as string}
-                            className="font-normal"
+                            href={item.isComing ? "#" : (item.url as string)}
+                            className={cn("font-normal", {
+                              "text-gray-400 cursor-not-allowed": item.isComing,
+                            })}
                           >
                             {item.icon && item.icon}
                             {item.title}

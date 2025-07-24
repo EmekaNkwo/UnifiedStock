@@ -1,14 +1,15 @@
 import React from "react";
-import SalesReport from "@/components/sales-report";
 
+import Category from "@/components/categories";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sales Report",
-  description: "Sales Report",
+  title: "Categories",
+  description: "Categories",
 };
+
 const page = () => {
-  return <SalesReport />;
+  return <Category />;
 };
 
 export default page;

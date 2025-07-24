@@ -4,6 +4,7 @@ import "./globals.css";
 import Head from "next/head";
 import { ReduxProvider } from "@/redux/provider";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "next-themes";
 
 const karla = Karla({
   subsets: ["latin"],
@@ -38,10 +39,15 @@ export default function RootLayout({
         />
       </Head>
       <body className="font-sans antialiased">
-        <ReduxProvider>
-          {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ReduxProvider>{children}</ReduxProvider>
           <Toaster />
-        </ReduxProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
