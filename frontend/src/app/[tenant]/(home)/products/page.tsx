@@ -1,7 +1,11 @@
-import React from "react";
+import Products from "@/components/products";
+import { Metadata } from "next";
 
-const page = () => {
-  return <div>page</div>;
+export const metadata: Metadata = {
+  title: "Products",
+  description: "Manage your product inventory",
 };
 
-export default page;
+export default function ProductsPage() {
+  return <Products />;
+}

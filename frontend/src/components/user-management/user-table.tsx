@@ -6,16 +6,15 @@ import { MoreHorizontal, UserPlus, Mail, Edit, Ban } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DropdownMenuAction } from "@/shared/custom-ui";
 import { DataTable } from "@/shared/custom-ui/data-table";
-import { mockUsers } from "../dashboard/data";
 import { User } from "../dashboard/types";
 
 export const UserTable = ({
   isDashboardView = false,
+  users,
 }: {
   isDashboardView?: boolean;
+  users: User[];
 }) => {
-  const users = mockUsers;
-
   const getStatusBadge = (status: User["status"]) => {
     const statusMap = {
       active: { label: "Active", variant: "outline" as const },

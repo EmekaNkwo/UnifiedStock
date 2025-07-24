@@ -20,13 +20,13 @@ import {
 } from "lucide-react";
 import { SidebarItem } from "../models";
 
-export const sidebarItems: SidebarItem[] = [
+export const getSidebarItems = (tenant: string): SidebarItem[] => [
   {
     title: "Home",
     items: [
       {
         title: "Dashboard",
-        url: "/dashboard",
+        url: `/${tenant}/dashboard`,
         icon: <GaugeCircleIcon />,
       },
     ],
@@ -36,24 +36,24 @@ export const sidebarItems: SidebarItem[] = [
     items: [
       {
         title: "Products",
-        url: "/inventory",
+        url: `/${tenant}/products`,
         icon: <TableProperties />,
       },
       {
         title: "Categories",
-        url: "/categories",
+        url: `/${tenant}/categories`,
         icon: <ChartBarStacked />,
         isActive: true,
       },
       {
         title: "Low Stock",
-        url: "/low-stock",
+        url: `/${tenant}/low-stock`,
         icon: <ArrowDownNarrowWide />,
         isComing: true,
       },
       {
         title: "Stock Adjustment",
-        url: "/stock-adjustment",
+        url: `/${tenant}/stock-adjustment`,
         icon: <SendToBack />,
         isComing: true,
       },
@@ -64,17 +64,17 @@ export const sidebarItems: SidebarItem[] = [
     items: [
       {
         title: "Purchase Orders",
-        url: "/purchase-orders",
+        url: `/${tenant}/purchase-orders`,
         icon: <TicketPlus />,
       },
       {
         title: "Suppliers",
-        url: "/suppliers",
+        url: `/${tenant}/suppliers`,
         icon: <Cable />,
       },
       {
         title: "Receivings",
-        url: "/receivings",
+        url: `/${tenant}/receivings`,
         icon: <HandCoins />,
       },
     ],
@@ -84,17 +84,17 @@ export const sidebarItems: SidebarItem[] = [
     items: [
       {
         title: "Invoices",
-        url: "/invoices",
+        url: `/${tenant}/invoices`,
         icon: <Clock />,
       },
       {
         title: "Customers",
-        url: "/customers",
+        url: `/${tenant}/customers`,
         icon: <Settings />,
       },
       {
         title: "Returns",
-        url: "/returns",
+        url: `/${tenant}/returns`,
         icon: <HelpCircle />,
       },
     ],
@@ -104,18 +104,18 @@ export const sidebarItems: SidebarItem[] = [
     items: [
       {
         title: "Sales Reports",
-        url: "/sales-reports",
+        url: `/${tenant}/sales-reports`,
         icon: <DiamondPercent />,
       },
       {
         title: "Valuation",
-        url: "/inventory-valuation",
+        url: `/${tenant}/inventory-valuation`,
         icon: <ChartCandlestick />,
         isComing: true,
       },
       {
         title: "Stock Movement",
-        url: "/stock-movement",
+        url: `/${tenant}/stock-movement`,
         icon: <SquareActivity />,
         isComing: true,
       },
@@ -126,22 +126,22 @@ export const sidebarItems: SidebarItem[] = [
     items: [
       {
         title: "Users Management",
-        url: "/users",
+        url: `/${tenant}/users`,
         icon: <Users />,
       },
       {
         title: "Inventory Settings",
-        url: "/inventory-settings",
+        url: `/${tenant}/inventory-settings`,
         icon: <Settings2 />,
       },
       {
         title: "Tenant Settings",
-        url: "/tenant-settings",
+        url: `/${tenant}/tenant-settings`,
         icon: <UserCog />,
       },
       {
         title: "Tax Settings",
-        url: "/tax-settings",
+        url: `/${tenant}/tax-settings`,
         icon: <Percent />,
       },
     ],

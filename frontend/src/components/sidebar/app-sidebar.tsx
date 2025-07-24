@@ -14,12 +14,16 @@ import {
 } from "@/components/ui/sidebar";
 import { ModuleSwitcher } from "./module-switcher";
 import Link from "next/link";
-import { sidebarItems } from "@/shared/data/sidebarItem";
+import { getSidebarItems } from "@/shared/data/sidebarItem";
 import { Label } from "../ui/label";
 import { useAppSidebar } from "./useAppSidebar";
+import useGetTenant from "@/hooks/use-get-tenant";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isActive } = useAppSidebar();
+  const { tenant } = useGetTenant();
+  const items = getSidebarItems(tenant as string);
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -28,7 +32,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu className="gap-2">
-            {sidebarItems.map((item) => (
+            {items.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <Label className="text-xs my-2.5 ml-3.5">
                   {item.icon && item.icon}

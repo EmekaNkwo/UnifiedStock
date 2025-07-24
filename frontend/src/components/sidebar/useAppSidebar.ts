@@ -2,7 +2,8 @@
 import { SidebarItem } from "@/shared/models";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
-import { sidebarItems } from "@/shared/data/sidebarItem";
+import { getSidebarItems } from "@/shared/data/sidebarItem";
+import useGetTenant from "@/hooks/use-get-tenant";
 
 function findActiveTitle(
   items: SidebarItem[],
@@ -23,10 +24,12 @@ function findActiveTitle(
 export function useAppSidebar() {
   const pathname = usePathname();
   const [activeTitle, setActiveTitle] = useState<string | null>(null);
+  const { tenant } = useGetTenant();
+  const items = getSidebarItems(tenant as string);
 
   useEffect(() => {
     if (pathname) {
-      const title = findActiveTitle(sidebarItems, pathname);
+      const title = findActiveTitle(items, pathname);
       setActiveTitle(title);
     }
   }, [pathname]);
