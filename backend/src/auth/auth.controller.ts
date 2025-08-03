@@ -1,5 +1,17 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  NotFoundException,
+  UseGuards,
+  Request,
+  Get,
+  BadRequestException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from '@/guards/jwt-auth.guard';
+import { Role } from './entities/role.enum';
+import ResponseHelper from '@/common/helpers/response.helper';
 
 @Controller('auth')
 export class AuthController {
@@ -7,20 +19,39 @@ export class AuthController {
 
   @Post('signup')
   async signup(
-    @Body('email') email: string,
-    @Body('password') password: string,
+    @Body('username') username: string,
+    @Body('role') role: Role,
     @Body('tenantName') tenantName: string,
   ) {
-    return this.authService.signup(email, password, tenantName);
+    try {
+      const result = await this.authService.signup(username, role, tenantName);
+      return ResponseHelper.success(
+        'User registered successfully',
+        result,
+        201,
+      );
+    } catch (error) {
+      return ResponseHelper.badRequest(error.message);
+    }
   }
 
   @Post('login')
-  async login(
-    @Body('email') email: string,
-    @Body('password') password: string,
-  ) {
-    return this.authService.login(
-      await this.authService.validateUser(email, password),
+  async login(@Body('username') username: string) {
+    const user = await this.authService.validateUser(username);
+    const result = await this.authService.login(user);
+    if (!user) {
+      return ResponseHelper.notFound('User not found');
+    }
+    return ResponseHelper.success('User logged in successfully', result, 200);
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  async getProfile(@Request() req) {
+    const result = await this.authService.getProfile(req.user.userId);
+    return ResponseHelper.success(
+      'User profile retrieved successfully',
+      result,
+      200,
     );
   }
 }

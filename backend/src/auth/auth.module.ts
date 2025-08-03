@@ -6,10 +6,11 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { jwtConstants } from './constants';
 import { User } from './entities/user.entity';
+import { Tenant } from '../tenant/entities/tenant.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Tenant]),
     JwtModule.register({
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '1h' },
@@ -17,6 +18,6 @@ import { User } from './entities/user.entity';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
-  exports: [AuthService],
+  exports: [AuthService, JwtModule, TypeOrmModule],
 })
 export class AuthModule {}
