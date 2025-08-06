@@ -1,19 +1,39 @@
+"use client";
 import { getTenant } from "@/lib/tenant-utils";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-export default async function TenantLayout({
+export default function TenantLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
   params: { tenant: string };
 }) {
-  // Fetch tenant data (you'll need to implement this)
-  const tenant = await getTenant(params.tenant);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
-  // If tenant doesn't exist, redirect to 404 or home
-  if (!tenant) {
-    notFound();
+  useEffect(() => {
+    const fetchTenant = async () => {
+      try {
+        const accessToken = localStorage.getItem("accessToken") || undefined;
+        const tenant = await getTenant(params.tenant, accessToken);
+
+        if (!tenant) {
+          notFound();
+        }
+      } catch (error) {
+        console.error("Error fetching tenant:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTenant();
+  }, [params.tenant, router]);
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Or your custom loading component
   }
 
   return <>{children}</>;

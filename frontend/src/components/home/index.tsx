@@ -1,37 +1,18 @@
-import Image from "next/image";
 import Link from "next/link";
+import { Label } from "../ui/label";
+import { Navbar } from "../layout/navbar";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Navigation */}
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">HIS</span>
-          </div>
-          <span className="text-xl font-bold text-gray-900">
-            Hybrid Inventory
-          </span>
-        </div>
-        <div className="hidden md:flex space-x-8">
-          <a href="#features" className="text-gray-600 hover:text-blue-600">
-            Features
-          </a>
-          <a href="#how-it-works" className="text-gray-600 hover:text-blue-600">
-            How It Works
-          </a>
-          <a href="#pricing" className="text-gray-600 hover:text-blue-600">
-            Pricing
-          </a>
-        </div>
-        <Link
-          href="/login"
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Get Started
-        </Link>
-      </nav>
+      <Navbar
+        cta={{
+          label: "Get Started",
+          href: "/login",
+          className: "bg-blue-600 text-white hover:bg-blue-700",
+        }}
+      />
 
       {/* Hero Section */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
@@ -88,7 +69,9 @@ export default function Home() {
               className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+              <Label className="text-xl font-semibold mb-2 text-gray-900">
+                {feature.title}
+              </Label>
               <p className="text-gray-600">{feature.description}</p>
             </div>
           ))}

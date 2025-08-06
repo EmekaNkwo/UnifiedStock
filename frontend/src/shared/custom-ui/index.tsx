@@ -31,6 +31,16 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ChevronRight } from "lucide-react";
 import React, { useCallback, ReactNode } from "react";
 
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+import { LucideIcon } from "lucide-react";
+import {
+  FieldErrors,
+  FieldValues,
+  UseFormRegisterReturn,
+} from "react-hook-form";
+
 interface DropdownMenuActionProps {
   trigger: ReactNode | string;
   items: Array<{
@@ -329,5 +339,112 @@ export function CustomModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+interface CustomInputProps {
+  id: string;
+  label: string;
+  type?: string;
+  placeholder?: string;
+  icon?: LucideIcon;
+  error?: FieldErrors<FieldValues>;
+  registration: Partial<UseFormRegisterReturn>;
+  className?: string;
+  required?: boolean;
+  disabled?: boolean;
+}
+
+export function CustomInput({
+  id,
+  label,
+  type = "text",
+  placeholder = "",
+  icon: Icon,
+  error,
+  registration,
+  className,
+  required = false,
+  disabled = false,
+  ...props
+}: CustomInputProps) {
+  return (
+    <div className={cn("w-full space-y-1.5", className)}>
+      <Label
+        htmlFor={id}
+        className={cn(
+          "block text-sm font-medium",
+          error ? "text-destructive" : "text-gray-900"
+        )}
+      >
+        {label}
+        {required && <span className="ml-1 text-destructive">*</span>}
+      </Label>
+
+      <div className="relative">
+        {Icon && (
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <Icon
+              className={cn(
+                "h-5 w-5",
+                error ? "text-destructive" : "text-gray-400"
+              )}
+            />
+          </div>
+        )}
+
+        <Input
+          id={id}
+          type={type}
+          placeholder={placeholder}
+          className={cn(
+            "w-full text-gray-900 dark:text-gray-100",
+            Icon && "pl-10",
+            error
+              ? "border-destructive focus-visible:ring-destructive"
+              : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+          )}
+          disabled={disabled}
+          aria-invalid={error ? "true" : "false"}
+          {...registration}
+          {...props}
+        />
+      </div>
+
+      {error && (
+        <p className="text-sm font-medium text-destructive" role="alert">
+          {error?.root?.message}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function CustomButton({
+  label,
+  onClick,
+  disabled,
+  isLoading = false,
+  className = "bg-blue-600 text-white",
+}: {
+  label: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  isLoading?: boolean;
+  className?: string;
+}) {
+  return (
+    <Button
+      onClick={onClick}
+      disabled={disabled || isLoading}
+      className={cn(
+        "w-full font-medium hover:bg-blue-700 flex items-center justify-center gap-2",
+        className,
+        { "opacity-75 cursor-not-allowed": isLoading }
+      )}
+    >
+      {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+      {label}
+    </Button>
   );
 }

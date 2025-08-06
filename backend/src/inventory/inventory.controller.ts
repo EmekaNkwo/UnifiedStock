@@ -14,18 +14,33 @@ import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { TenantGuard } from '../guards/tenant.guard';
-import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { ResponseHelper } from '../common/helpers/response.helper';
+import {
+  InventoryResponseDto,
+  StockCheckDto,
+} from './dto/inventory-response.dto';
 
 @ApiTags('inventory')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
-@Controller(':tenant/inventory')
+@Controller('inventory')
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new inventory item' })
+  @ApiResponse({
+    status: 201,
+    description: 'Item created successfully',
+    type: InventoryResponseDto,
+  })
   async create(@Body() createItemDto: CreateItemDto, @Request() req) {
     const item = await this.inventoryService.create(
       createItemDto,
@@ -37,6 +52,11 @@ export class InventoryController {
 
   @Get()
   @ApiOperation({ summary: 'Get all inventory items for the tenant' })
+  @ApiResponse({
+    status: 200,
+    description: 'Items retrieved successfully',
+    type: [InventoryResponseDto],
+  })
   async findAll(@Request() req) {
     const items = await this.inventoryService.findAll(req.user.tenantId);
     return ResponseHelper.success('Items retrieved successfully', items);
@@ -44,6 +64,12 @@ export class InventoryController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific inventory item' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Inventory item ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Item retrieved successfully',
+    type: InventoryResponseDto,
+  })
   async findOne(@Param('id') id: string, @Request() req) {
     const item = await this.inventoryService.findOne(id, req.user.tenantId);
     return ResponseHelper.success('Item retrieved successfully', item);
@@ -51,6 +77,12 @@ export class InventoryController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update an inventory item' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Inventory item ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Item updated successfully',
+    type: InventoryResponseDto,
+  })
   async update(
     @Param('id') id: string,
     @Body() updateItemDto: UpdateItemDto,
@@ -67,6 +99,8 @@ export class InventoryController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an inventory item' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Inventory item ID' })
+  @ApiResponse({ status: 200, description: 'Item deleted successfully' })
   async remove(@Param('id') id: string, @Request() req) {
     await this.inventoryService.remove(id, req.user.tenantId, req.user);
     return ResponseHelper.success('Item deleted successfully');
@@ -74,6 +108,11 @@ export class InventoryController {
 
   @Get('stock/check')
   @ApiOperation({ summary: 'Check for low stock items' })
+  @ApiResponse({
+    status: 200,
+    description: 'Stock levels checked successfully',
+    type: StockCheckDto,
+  })
   async checkStockLevels(@Request() req) {
     console.log('Checking stock levels for tenant:', req.user.tenantId);
     const result = await this.inventoryService.checkStockLevels(

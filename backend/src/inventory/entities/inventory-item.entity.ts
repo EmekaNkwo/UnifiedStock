@@ -26,6 +26,9 @@ export class InventoryItem {
   @Column()
   tenantId: string;
 
+  @Column({ nullable: true })
+  sku: string;
+
   @ManyToOne(() => Category, (category) => category.items, {
     onDelete: 'SET NULL',
   })

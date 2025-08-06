@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-api": "echo \"Generating API...\" && curl -f http://localhost:4100/api/docs-json -o openapi.json && echo 'API generated successfully' && npx @rtk-query/codegen-openapi openapi-config.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
@@ -21,6 +22,7 @@
     "@radix-ui/react-tabs": "^1.1.12",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@reduxjs/toolkit": "^2.8.2",
+    "@rtk-query/codegen-openapi": "^2.0.0",
     "@tanstack/react-table": "^8.21.3",
     "@types/lodash": "^4.17.20",
     "class-variance-authority": "^0.7.1",

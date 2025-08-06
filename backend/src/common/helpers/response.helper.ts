@@ -25,7 +25,7 @@ export class ResponseHelper {
       success: true,
       statusCode,
       message,
-      ...(data && { data }),
+      ...data,
     };
   }
 

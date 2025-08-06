@@ -2,7 +2,9 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -30,25 +32,58 @@ export class AuthService {
   }
 
   async login(user: User) {
-    const payload = {
-      sub: user.id,
-      username: user.username,
-      tenantId: user.tenant.id,
-      role: user.role,
-    };
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    try {
+      // Validate required user properties
+      if (!user.tenant || !user.tenant.id) {
+        throw new BadRequestException(
+          'User is not associated with a valid tenant',
+        );
+      }
+
+      const payload = {
+        sub: user.id,
         username: user.username,
+        tenantId: user.tenant.id,
         role: user.role,
-        tenant: {
-          id: user.tenant.id,
-          name: user.tenant.name,
-          slug: user.tenant.slug,
+      };
+
+      const accessToken = this.jwtService.sign(payload);
+      if (!accessToken) {
+        throw new InternalServerErrorException(
+          'Failed to generate access token',
+        );
+      }
+
+      return {
+        access_token: accessToken,
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          tenant: {
+            id: user.tenant.id,
+            name: user.tenant.name,
+            slug: user.tenant.slug,
+          },
         },
-      },
-    };
+      };
+    } catch (error) {
+      // Re-throw if it's already a NestJS exception
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof BadRequestException ||
+        error instanceof InternalServerErrorException
+      ) {
+        throw error;
+      }
+      // Log the error for debugging
+      console.error('Login error:', error);
+      throw new InternalServerErrorException('An error occurred during login');
+    }
   }
 
   async signup(username: string, role: Role, tenantName: string) {

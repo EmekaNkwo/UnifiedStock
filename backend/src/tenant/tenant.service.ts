@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant } from './entities/tenant.entity';
@@ -34,8 +30,8 @@ export class TenantService {
     }
   }
 
-  async create(createTenantDto: CreateTenantDto, user: User): Promise<Tenant> {
-    this.checkAdminAccess(user);
+  async create(createTenantDto: CreateTenantDto): Promise<Tenant> {
+    // this.checkAdminAccess(user);
     const slug = this.generateSlug(createTenantDto.name);
 
     // Check if tenant with same name or slug exists
@@ -53,20 +49,31 @@ export class TenantService {
       ...createTenantDto,
       slug,
     });
+    // console.log(tenant);s
 
     return this.tenantRepository.save(tenant);
   }
 
-  async findAll(user: User): Promise<Tenant[]> {
-    this.checkAdminAccess(user);
-    return this.tenantRepository.find();
+  async findAll(
+    user: User,
+    page = 1,
+    limit = 10,
+  ): Promise<{ data: Tenant[]; total: number }> {
+    // this.checkAdminAccess(user);
+    const [data, total] = await this.tenantRepository.findAndCount({
+      take: limit,
+      skip: (page - 1) * limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    return { data, total };
   }
 
   async findOne(id: string, user: User): Promise<Tenant> {
-    this.checkAdminAccess(user);
+    // this.checkAdminAccess(user);
     const tenant = await this.tenantRepository.findOne({ where: { id } });
     if (!tenant) {
-      throw new NotFoundException(`Tenant with ID ${id} not found`);
+      throw ResponseHelper.notFound(`Tenant with ID ${id} not found`);
     }
     return tenant;
   }
@@ -76,7 +83,7 @@ export class TenantService {
     updateTenantDto: UpdateTenantDto,
     user: User,
   ): Promise<Tenant> {
-    this.checkAdminAccess(user);
+    // this.checkAdminAccess(user);
     const tenant = await this.findOne(id, user);
 
     if (updateTenantDto.name && updateTenantDto.name !== tenant.name) {
@@ -88,7 +95,7 @@ export class TenantService {
       });
 
       if (existingTenant && existingTenant.id !== id) {
-        throw new ConflictException('Tenant with this name already exists');
+        throw ResponseHelper.badRequest('Tenant with this name already exists');
       }
 
       tenant.slug = slug;
@@ -99,10 +106,18 @@ export class TenantService {
   }
 
   async remove(id: string, user: User): Promise<void> {
-    this.checkAdminAccess(user);
+    // this.checkAdminAccess(user);
     const result = await this.tenantRepository.delete(id);
     if (result.affected === 0) {
-      throw new NotFoundException(`Tenant with ID ${id} not found`);
+      throw ResponseHelper.notFound(`Tenant with ID ${id} not found`);
     }
+  }
+
+  async getTenantBySlug(slug: string): Promise<Tenant> {
+    const tenant = await this.tenantRepository.findOne({ where: { slug } });
+    if (!tenant) {
+      throw ResponseHelper.notFound(`Tenant with slug ${slug} not found`);
+    }
+    return tenant;
   }
 }

@@ -4,60 +4,41 @@ import { IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateItemDto extends PartialType(CreateItemDto) {
-  @ApiProperty({ description: 'Name of the inventory item', required: false })
+  @ApiProperty()
   @IsString()
   @IsOptional()
   name?: string;
 
-  @ApiProperty({
-    description: 'Current quantity in stock',
-    minimum: 0,
-    required: false,
-  })
+  @ApiProperty()
   @IsNumber()
   @Min(0)
   @IsOptional()
   quantity?: number;
 
-  @ApiProperty({
-    description: 'Unit price of the item',
-    minimum: 0,
-    required: false,
-  })
+  @ApiProperty()
   @IsNumber()
   @Min(0)
   @IsOptional()
   price?: number;
 
-  @ApiProperty({
-    description: 'SKU (Stock Keeping Unit) code',
-    required: false,
-  })
+  @ApiProperty()
   @IsString()
   @IsOptional()
   sku?: string;
 
-  @ApiProperty({
-    description: 'Minimum stock level for alerts',
-    required: false,
-    minimum: 0,
-  })
+  @ApiProperty()
   @IsNumber()
   @Min(0)
   @IsOptional()
   minStockLevel?: number;
 
-  @ApiProperty({
-    description: 'Maximum stock level',
-    required: false,
-    minimum: 0,
-  })
+  @ApiProperty()
   @IsNumber()
   @Min(0)
   @IsOptional()
   maxStockLevel?: number;
 
-  @ApiProperty({ description: 'Category ID for the item', required: false })
+  @ApiProperty()
   @IsUUID()
   @IsOptional()
   categoryId?: string;

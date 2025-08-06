@@ -22,6 +22,11 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import ResponseHelper from '../common/helpers/response.helper';
+import {
+  CategoryResponseDto,
+  CategoryResponseDtoWithoutCreatedBy,
+  UpdateCategoryResponseDto,
+} from './dto/category-response.dto';
 
 @ApiTags('categories')
 @ApiBearerAuth()
@@ -32,7 +37,11 @@ export class CategoryController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new category' })
-  @ApiResponse({ status: 201, description: 'Category successfully created' })
+  @ApiResponse({
+    status: 201,
+    description: 'Category successfully created',
+    type: CategoryResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async create(@Body() createCategoryDto: CreateCategoryDto, @Request() req) {
@@ -50,7 +59,11 @@ export class CategoryController {
 
   @Get()
   @ApiOperation({ summary: 'Get all categories for the current tenant' })
-  @ApiResponse({ status: 200, description: 'Returns list of categories' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of categories',
+    type: [CategoryResponseDtoWithoutCreatedBy],
+  })
   async findAll(@Request() req) {
     const categories = await this.categoryService.findAll(
       req.user.tenantId,
@@ -64,7 +77,11 @@ export class CategoryController {
 
   @Get('tree')
   @ApiOperation({ summary: 'Get category tree for the current tenant' })
-  @ApiResponse({ status: 200, description: 'Returns category tree' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns category tree',
+    type: [CategoryResponseDtoWithoutCreatedBy],
+  })
   async getCategoryTree(@Request() req) {
     const categoryTree = await this.categoryService.getCategoryTree(
       req.user.tenantId,
@@ -79,7 +96,11 @@ export class CategoryController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific category by ID' })
   @ApiParam({ name: 'id', description: 'Category ID' })
-  @ApiResponse({ status: 200, description: 'Returns the category' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the category',
+    type: UpdateCategoryResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Category not found' })
   async findOne(@Param('id') id: string, @Request() req) {
     const category = await this.categoryService.findOne(
@@ -93,7 +114,11 @@ export class CategoryController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a category' })
   @ApiParam({ name: 'id', description: 'Category ID' })
-  @ApiResponse({ status: 200, description: 'Category updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Category updated successfully',
+    type: UpdateCategoryResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Category not found' })
