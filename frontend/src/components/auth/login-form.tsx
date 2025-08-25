@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/error-utils";
 import { useCrud } from "@/hooks/use-crud";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "@/shared/zod-schema";
 
 export function LoginForm({
   className,
@@ -21,7 +23,9 @@ export function LoginForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<{ username: string }>();
+  } = useForm<{ username: string }>({
+    resolver: zodResolver(loginSchema),
+  });
 
   const [login, setLoginMutation] = useAuthControllerLoginMutation();
 
@@ -59,13 +63,12 @@ export function LoginForm({
               placeholder="Enter your username"
               icon={User}
               error={errors}
-              registration={register("username", {
-                required: "Username is required",
-              })}
+              registration={register("username")}
               required
             />
           </div>
           <CustomButton
+            type="submit"
             label="Sign In"
             isLoading={setLoginMutation.isLoading}
           />

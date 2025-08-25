@@ -169,12 +169,13 @@ export function ProductActions({
                   </div>
                 ),
                 onClick: onImport,
+                disabled: true,
               },
               {
                 label: (
                   <div className="flex items-center gap-2">
                     <Download className="mr-2 h-4 w-4" />
-                    Export
+                    Export CSV
                   </div>
                 ),
                 onClick: onExport,

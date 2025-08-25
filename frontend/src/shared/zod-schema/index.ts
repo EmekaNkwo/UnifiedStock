@@ -7,6 +7,10 @@ export const categoryFormSchema = z.object({
   isActive: z.string().optional(),
 });
 
+export const loginSchema = z.object({
+  username: z.string().min(2, "Username must be at least 2 characters"),
+});
+
 export const productFormSchema = z.object({
   image: z.string(),
   name: z.string().min(2, "Name must be at least 2 characters"),

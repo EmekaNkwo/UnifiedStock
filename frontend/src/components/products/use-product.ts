@@ -140,19 +140,28 @@ const useProduct = () => {
   };
 
   const handleExporCSV = () => {
+    const formattedDate = new Date().toISOString().split("T")[0];
+
+    // Transform the data to include nested properties at the root level
+    const transformedData =
+      getProductInventoryData?.data?.data?.map((item) => ({
+        ...item,
+        categoryName: item.category?.name || "", // Flatten the category name
+      })) || [];
+
     exportToCsv({
-      rows: getProductInventoryData?.data?.data || [],
+      rows: transformedData,
       headers: [
         { label: "Name", key: "name" },
         { label: "SKU", key: "sku" },
         { label: "Barcode", key: "barcode" },
-        { label: "Category", key: "category" },
+        { label: "Category", key: "categoryName" }, // Use the flattened field
         { label: "Price", key: "price" },
         { label: "Cost", key: "cost" },
         { label: "Quantity", key: "quantity" },
         { label: "Status", key: "status" },
       ],
-      filename: "products.csv",
+      filename: `products_${formattedDate}.csv`,
     });
   };
 
