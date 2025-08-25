@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { ProductFilters } from "./types";
-import { mockProducts } from "./mockData";
 
 import { ProductActions } from "./product-actions";
 import { ProductTable } from "./product-table";
@@ -11,11 +10,20 @@ import { AddProductModal } from "./add-product-modal";
 import useProduct from "./use-product";
 import { InventoryDto } from "@/redux/services/inventory-api";
 import useModal from "@/hooks/use-modal";
+import useCategory from "../categories/use-category";
 
 export default function Products() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<Partial<ProductFilters>>({});
-  const { getProductInventoryData, handleDeleteProduct } = useProduct();
+  const {
+    getProductInventoryData,
+    handleDeleteProduct,
+    handleUpdateProductStatus,
+    handleUpdateProductActive,
+    clearCrudState,
+    handleExporCSV,
+  } = useProduct();
+  const { categoryData } = useCategory();
   const { isOpen: isModalOpen, openModal, closeModal } = useModal();
 
   const filteredProducts = useMemo(() => {
@@ -55,11 +63,6 @@ export default function Products() {
     filters.category,
   ]);
 
-  const handleExport = () => {
-    // Implement export logic
-    console.log("Export clicked");
-  };
-
   const handleImport = () => {
     // Implement import logic
     console.log("Import clicked");
@@ -79,17 +82,20 @@ export default function Products() {
             </p>
           </div>
           <ProductActions
-            onAddProduct={() => openModal()}
-            onExport={handleExport}
+            onAddProduct={() => {
+              clearCrudState();
+              openModal();
+            }}
+            onExport={handleExporCSV}
             onImport={handleImport}
             onSearch={setSearchQuery}
             onFilterChange={(newFilters) =>
               setFilters((prev) => ({ ...prev, ...newFilters }))
             }
             activeFilters={filters}
-            availableCategories={Array.from(
-              new Set(mockProducts.map((p) => p.category))
-            )}
+            availableCategories={
+              categoryData?.data?.map((category) => category.name) || []
+            }
             className="mb-4"
           />
         </div>
@@ -102,6 +108,10 @@ export default function Products() {
             openModal();
           }}
           onDelete={(id) => handleDeleteProduct(id)}
+          onUpdateProductStatus={(id, status) =>
+            handleUpdateProductStatus(id, status)
+          }
+          onUpdateProductActive={(id) => handleUpdateProductActive(id)}
         />
       </DashboardContainer>
     </>

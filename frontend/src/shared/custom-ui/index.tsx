@@ -149,7 +149,7 @@ export const DropdownMenuAction = ({
               {item.icon && <span className="w-4 h-4">{item.icon}</span>}
               {item.label}
             </div>
-            <ChevronRight className="w-4 h-4 ml-auto" />
+            {/* <ChevronRight className="w-4 h-4 ml-auto" /> */}
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
             {item.items.map((subItem, subIndex) =>

@@ -3,7 +3,10 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { DataTable } from "@/shared/custom-ui/data-table";
-import { InventoryResponseDto } from "@/redux/services/inventory-api";
+import {
+  InventoryResponseDto,
+  InventoryStatus,
+} from "@/redux/services/inventory-api";
 
 import { DropdownMenuAction } from "@/shared/custom-ui";
 import {
@@ -33,6 +36,8 @@ interface ProductTableProps {
   total?: number;
   onEdit?: () => void;
   onDelete?: (id: string) => void;
+  onUpdateProductStatus?: (id: string, status: InventoryStatus) => void;
+  onUpdateProductActive?: (id: string) => void;
 }
 
 export function ProductTable({
@@ -41,6 +46,8 @@ export function ProductTable({
   total,
   onEdit,
   onDelete,
+  onUpdateProductStatus,
+  onUpdateProductActive,
 }: ProductTableProps) {
   const { setCrudState } = useCrud();
 
@@ -82,6 +89,15 @@ export function ProductTable({
       // cell: ({ row }) => `$${row.original?.cost?.toFixed(2)}`,
     },
     {
+      accessorKey: "isActive",
+      header: "Status",
+      cell: ({ row }) => (
+        <Badge variant={row.original?.isActive ? "default" : "destructive"}>
+          {row.original?.isActive ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+    {
       accessorKey: "quantity",
       header: "Quantity",
     },
@@ -91,7 +107,7 @@ export function ProductTable({
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: "Stock Level",
       cell: ({ row }) =>
         row.original?.status && (
           <Badge variant={statusVariantMap[row.original?.status]}>
@@ -127,7 +143,28 @@ export function ProductTable({
             {
               icon: row.original.isActive ? <ToggleLeft /> : <ToggleRight />,
               label: row.original.isActive ? "Deactivate" : "Activate",
-              onClick: () => onDelete?.(row.original.id),
+              onClick: () => onUpdateProductActive?.(row.original.id),
+            },
+            {
+              label: "Change Product Status",
+              type: "submenu",
+              items: [
+                {
+                  label: "In Stock",
+                  onClick: () =>
+                    onUpdateProductStatus?.(row.original.id, "in_stock"),
+                },
+                {
+                  label: "Out of Stock",
+                  onClick: () =>
+                    onUpdateProductStatus?.(row.original.id, "out_of_stock"),
+                },
+                {
+                  label: "Low Stock",
+                  onClick: () =>
+                    onUpdateProductStatus?.(row.original.id, "low_stock"),
+                },
+              ],
             },
             {
               icon: <Trash className="text-red-500" />,

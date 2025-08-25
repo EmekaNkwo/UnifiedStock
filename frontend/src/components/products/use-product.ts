@@ -5,7 +5,9 @@ import {
   useInventoryControllerCreateMutation,
   useInventoryControllerFindAllQuery,
   useInventoryControllerRemoveMutation,
+  useInventoryControllerUpdateActiveStateMutation,
   useInventoryControllerUpdateMutation,
+  useInventoryControllerUpdateStatusMutation,
 } from "@/redux/services/inventory-api";
 import { GetAllProductsSchema } from "@/shared/zod-schema";
 import { useForm } from "react-hook-form";
@@ -21,6 +23,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/error-utils";
 import { InventoryStatus } from "@/redux/services/inventory-api";
+import { exportToCsv } from "@/lib/utils";
 
 const useProduct = () => {
   const { tableState } = useTable();
@@ -65,6 +68,10 @@ const useProduct = () => {
 
   const [deleteProduct, deleteProductMutation] =
     useInventoryControllerRemoveMutation();
+  const [changeProductStatus, changeProductStatusMutation] =
+    useInventoryControllerUpdateStatusMutation();
+  const [changeProductActive, changeProductActiveMutation] =
+    useInventoryControllerUpdateActiveStateMutation();
 
   const isCreateOrUpdateSuccess =
     addProductMutation.isSuccess || updateProductMutation.isSuccess;
@@ -78,6 +85,24 @@ const useProduct = () => {
     addProductForm.setValue("barcode", code);
     setActiveTab("form");
     setIsScanning(false);
+  };
+
+  const handleUpdateProductActive = async (id: string) => {
+    await changeProductActive({
+      id,
+    });
+  };
+
+  const handleUpdateProductStatus = async (
+    id: string,
+    status: InventoryStatus
+  ) => {
+    await changeProductStatus({
+      id,
+      body: {
+        status,
+      },
+    });
   };
 
   const handleDeleteProduct = async (id: string) => {
@@ -114,8 +139,22 @@ const useProduct = () => {
     });
   };
 
-  console.log("isEditMode", isEditMode);
-  console.log("record", crudState.record);
+  const handleExporCSV = () => {
+    exportToCsv({
+      rows: getProductInventoryData?.data?.data || [],
+      headers: [
+        { label: "Name", key: "name" },
+        { label: "SKU", key: "sku" },
+        { label: "Barcode", key: "barcode" },
+        { label: "Category", key: "category" },
+        { label: "Price", key: "price" },
+        { label: "Cost", key: "cost" },
+        { label: "Quantity", key: "quantity" },
+        { label: "Status", key: "status" },
+      ],
+      filename: "products.csv",
+    });
+  };
 
   useEffect(() => {
     if (isEditMode) {
@@ -144,11 +183,30 @@ const useProduct = () => {
       const file = e.target.files?.[0];
       if (!file) return;
 
+      // Check file size (2MB = 2 * 1024 * 1024 bytes)
+      const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+      if (file.size > maxSize) {
+        toast.error("Image size should not exceed 2MB");
+        e.target.value = ""; // Clear the file input
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload an image file");
+        e.target.value = ""; // Clear the file input
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setPreviewImage(base64String);
         addProductForm.setValue("image", base64String);
+      };
+      reader.onerror = () => {
+        toast.error("Error reading file");
+        e.target.value = ""; // Clear the file input
       };
       reader.readAsDataURL(file);
     },
@@ -192,6 +250,28 @@ const useProduct = () => {
     }
   }, [deleteProductMutation.isSuccess, deleteProductMutation.isError]);
 
+  useEffect(() => {
+    if (changeProductActiveMutation.isSuccess) {
+      toast.success("Product Active Status Changed Successfully");
+    } else if (changeProductActiveMutation.isError) {
+      handleApiError(changeProductActiveMutation.error);
+    }
+  }, [
+    changeProductActiveMutation.isSuccess,
+    changeProductActiveMutation.isError,
+  ]);
+
+  useEffect(() => {
+    if (changeProductStatusMutation.isSuccess) {
+      toast.success("Product Status Changed Successfully");
+    } else if (changeProductStatusMutation.isError) {
+      handleApiError(changeProductStatusMutation.error);
+    }
+  }, [
+    changeProductStatusMutation.isSuccess,
+    changeProductStatusMutation.isError,
+  ]);
+
   return {
     getProductInventoryData,
     getProductForm: form,
@@ -209,6 +289,10 @@ const useProduct = () => {
     isCreateOrUpdateSuccess,
     handleDeleteProduct,
     isEditMode,
+    clearCrudState,
+    handleUpdateProductStatus,
+    handleUpdateProductActive,
+    handleExporCSV,
   };
 };
 

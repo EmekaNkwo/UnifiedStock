@@ -65,6 +65,17 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/inventory/${queryArg.id}/status`,
           method: "PATCH",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["inventory"],
+      }),
+      inventoryControllerUpdateActiveState: build.mutation<
+        InventoryControllerUpdateActiveStateApiResponse,
+        InventoryControllerUpdateActiveStateApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/inventory/${queryArg.id}/active`,
+          method: "PATCH",
         }),
         invalidatesTags: ["inventory"],
       }),
@@ -113,6 +124,16 @@ export type InventoryControllerRemoveApiArg = {
 export type InventoryControllerUpdateStatusApiResponse =
   /** status 200 Item status updated successfully */ InventoryResponseDto;
 export type InventoryControllerUpdateStatusApiArg = {
+  /** Inventory item ID */
+  id: string;
+  body: {
+    /** New status for the inventory item */
+    status?: "in_stock" | "low_stock" | "out_of_stock";
+  };
+};
+export type InventoryControllerUpdateActiveStateApiResponse =
+  /** status 200 Item activated successfully */ InventoryResponseDto;
+export type InventoryControllerUpdateActiveStateApiArg = {
   /** Inventory item ID */
   id: string;
 };
@@ -187,5 +208,6 @@ export const {
   useInventoryControllerUpdateMutation,
   useInventoryControllerRemoveMutation,
   useInventoryControllerUpdateStatusMutation,
+  useInventoryControllerUpdateActiveStateMutation,
   useInventoryControllerCheckStockLevelsQuery,
 } = injectedRtkApi;

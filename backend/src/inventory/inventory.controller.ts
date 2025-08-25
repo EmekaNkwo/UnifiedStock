@@ -22,6 +22,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBody,
 } from '@nestjs/swagger';
 import { ResponseHelper } from '../common/helpers/response.helper';
 import {
@@ -29,6 +30,7 @@ import {
   InventoryItemResponseDto,
   InventoryResponseDto,
   StockCheckDto,
+  InventoryStatus,
 } from './dto/inventory-response.dto';
 
 @ApiTags('inventory')
@@ -133,14 +135,52 @@ export class InventoryController {
   @Patch(':id/status')
   @ApiOperation({ summary: 'Update the status of an inventory item' })
   @ApiParam({ name: 'id', type: 'string', description: 'Inventory item ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        status: {
+          type: 'string',
+          enum: Object.values(InventoryStatus),
+          description: 'New status for the inventory item',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Item status updated successfully',
     type: InventoryResponseDto,
   })
-  async updateStatus(@Param('id') id: string, @Request() req) {
-    await this.inventoryService.updateStatus(id, req.user.tenantId, req.user);
+  async updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: InventoryStatus,
+    @Request() req,
+  ) {
+    await this.inventoryService.updateStatus(
+      id,
+      status,
+      req.user.tenantId,
+      req.user,
+    );
     return ResponseHelper.success('Item status updated successfully');
+  }
+
+  @Patch(':id/active')
+  @ApiOperation({ summary: 'Activate an inventory item' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Inventory item ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Item activated successfully',
+    type: InventoryResponseDto,
+  })
+  async updateActiveState(@Param('id') id: string, @Request() req) {
+    await this.inventoryService.updateActiveState(
+      id,
+      req.user.tenantId,
+      req.user,
+    );
+    return ResponseHelper.success('Item activated successfully');
   }
 
   @Get('stock/check')

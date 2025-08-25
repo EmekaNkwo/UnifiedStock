@@ -227,10 +227,15 @@ export class InventoryService {
     await this.itemsRepository.remove(item);
   }
 
-  async updateStatus(id: string, tenantId: string, user: User): Promise<void> {
+  async updateStatus(
+    id: string,
+    status: InventoryStatus,
+    tenantId: string,
+    user: User,
+  ): Promise<void> {
     this.checkAdminAccess(user, tenantId);
     const item = await this.findOne(id, tenantId);
-    item.status = this.calculateStatus(item.quantity, item.minStockLevel);
+    item.status = status;
     await this.itemsRepository.save(item);
   }
 

@@ -17,6 +17,7 @@ import { AddProductFormValues } from "@/shared/zod-schema";
 import useProduct from "../use-product";
 import useCategory from "@/components/categories/use-category";
 import { useEffect } from "react";
+import { generateSkuNo } from "@/lib/utils";
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -42,6 +43,11 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
 
   const { categoryData } = useCategory();
 
+  const getSelectedCategory = () =>
+    categoryData?.data?.find(
+      (category) => category.id === addProductForm.getValues("category")
+    );
+
   const handleSubmit = (data: AddProductFormValues) => {
     handleAddOrUpdateProduct(data);
   };
@@ -66,12 +72,12 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
         }
         isLoading={isLoading}
         submitLabel={isEditMode ? "Update Product" : "Add Product"}
-        size="lg"
+        size="2xl"
       >
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="form">Manual Entry</TabsTrigger>
-            <TabsTrigger value="scan">Scan Barcode</TabsTrigger>
+            {/* <TabsTrigger value="scan">Scan Barcode</TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="form" className="pt-4">
@@ -133,24 +139,6 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
                   placeholder="Enter product name"
                 />
                 <div className="grid grid-cols-2 gap-4">
-                  <TextField
-                    control={addProductForm.control}
-                    name="sku"
-                    label="SKU"
-                    placeholder="Enter SKU"
-                  />
-
-                  <TextField
-                    control={addProductForm.control}
-                    name="barcode"
-                    label="Barcode"
-                    placeholder="Scan or enter barcode"
-                    rightIcon={<Barcode />}
-                    onClick={() => {
-                      setActiveTab("scan");
-                    }}
-                  />
-
                   <SelectField
                     control={addProductForm.control}
                     name="category"
@@ -162,6 +150,47 @@ export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
                         label: category.name,
                       })) || []
                     }
+                  />
+
+                  <TextField
+                    control={addProductForm.control}
+                    name="sku"
+                    label="SKU"
+                    placeholder="Enter SKU"
+                    rightIcon={
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const selectedCategory =
+                            addProductForm.watch("category");
+                          const categoryPrefix = selectedCategory
+                            ? getSelectedCategory()
+                                ?.name.slice(0, 3)
+                                .toUpperCase() ||
+                              selectedCategory.slice(0, 3).toUpperCase()
+                            : "";
+                          const randomSku = generateSkuNo({
+                            prefix: categoryPrefix,
+                            includeDate: true,
+                          });
+                          addProductForm.setValue("sku", randomSku);
+                        }}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Generate
+                      </button>
+                    }
+                  />
+
+                  <TextField
+                    control={addProductForm.control}
+                    name="barcode"
+                    label="Barcode"
+                    placeholder="Enter barcode"
+                    rightIcon={<Barcode />}
+                    // onClick={() => {
+                    //   setActiveTab("scan");
+                    // }}
                   />
 
                   <TextField
