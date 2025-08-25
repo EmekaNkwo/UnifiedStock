@@ -1,103 +1,71 @@
-// src/components/products/add-product-modal.tsx
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 
-import { Barcode, Camera, Loader2 } from "lucide-react";
+import { Form } from "@/components/ui/form";
+
+import { Barcode, Camera, Upload, X } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarcodeScanner } from "./barcode-scanner";
-import { CustomModal, CustomSelect, FormActions } from "@/shared/custom-ui";
-
-const productFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  sku: z.string().min(1, "SKU is required"),
-  barcode: z.string().optional(),
-  category: z.string().min(1, "Category is required"),
-  price: z.number().min(0, "Price must be positive"),
-  cost: z.number().min(0, "Cost must be positive"),
-  quantity: z.number().min(0, "Quantity must be positive"),
-  status: z.enum(["in_stock", "low_stock", "out_of_stock"]),
-});
-
-type ProductFormValues = z.infer<typeof productFormSchema>;
+import {
+  CustomModal,
+  SelectField,
+  TextAreaField,
+  TextField,
+} from "@/shared/custom-ui";
+import { AddProductFormValues } from "@/shared/zod-schema";
+import useProduct from "../use-product";
+import useCategory from "@/components/categories/use-category";
+import { useEffect } from "react";
 
 interface AddProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: ProductFormValues & { lastUpdated: Date }) => void;
-  categories: string[];
-  isLoading?: boolean;
 }
 
-export function AddProductModal({
-  isOpen,
-  onClose,
-  onSubmit,
-  categories,
-  isLoading = false,
-}: AddProductModalProps) {
-  const [activeTab, setActiveTab] = useState<"form" | "scan">("form");
-  const [isScanning, setIsScanning] = useState(false);
+export function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
+  const {
+    addProductForm,
+    activeTab,
+    setActiveTab,
+    isScanning,
+    setIsScanning,
+    handleScanComplete,
+    handleImageChange,
+    handleAddOrUpdateProduct,
+    removeImage,
+    previewImage,
+    isLoading,
+    isCreateOrUpdateSuccess,
+    isEditMode,
+  } = useProduct();
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productFormSchema),
-    defaultValues: {
-      name: "",
-      sku: "",
-      barcode: "",
-      category: "",
-      price: 0,
-      cost: 0,
-      quantity: 0,
-      status: "in_stock",
-    },
-  });
+  const { categoryData } = useCategory();
 
-  const handleScanComplete = (code: string) => {
-    form.setValue("barcode", code);
-    setActiveTab("form");
-    setIsScanning(false);
+  const handleSubmit = (data: AddProductFormValues) => {
+    handleAddOrUpdateProduct(data);
   };
 
-  const handleSubmit = (data: ProductFormValues) => {
-    onSubmit({
-      ...data,
-      lastUpdated: new Date(),
-    });
-  };
+  useEffect(() => {
+    if (isCreateOrUpdateSuccess) {
+      onClose();
+    }
+  }, [isCreateOrUpdateSuccess]);
 
   return (
     <>
       <CustomModal
         isOpen={isOpen}
         onClose={onClose}
-        onSubmit={form.handleSubmit(handleSubmit)}
-        title="Add New Product"
-        description="Add a new product to your inventory. Fill in the details below."
+        onSubmit={addProductForm.handleSubmit(handleSubmit)}
+        title={isEditMode ? "Edit Product" : "Add New Product"}
+        description={
+          isEditMode
+            ? "Update the product details below."
+            : "Add a new product to your inventory. Fill in the details below."
+        }
         isLoading={isLoading}
-        submitLabel="Add Product"
+        submitLabel={isEditMode ? "Update Product" : "Add Product"}
         size="lg"
       >
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
@@ -107,175 +75,144 @@ export function AddProductModal({
           </TabsList>
 
           <TabsContent value="form" className="pt-4">
-            <Form {...form}>
+            <Form {...addProductForm}>
               <form
-                onSubmit={form.handleSubmit(handleSubmit)}
+                onSubmit={addProductForm.handleSubmit(handleSubmit)}
                 className="space-y-4"
               >
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>Product Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter product name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="sku"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>SKU</FormLabel>
-                        <FormControl>
-                          <Input placeholder="SKU-001" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="barcode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Barcode</FormLabel>
-                        <div className="flex gap-2">
-                          <FormControl>
-                            <Input
-                              placeholder="Scan or enter barcode"
-                              {...field}
+                <div className="col-span-2">
+                  <div className="flex flex-col space-y-2">
+                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Product Image
+                    </label>
+                    <div className="flex items-center justify-center flex-col space-y-2">
+                      <div className="relative h-24 w-full overflow-hidden rounded-md border border-dashed border-gray-300">
+                        {previewImage || addProductForm.getValues("image") ? (
+                          <>
+                            <img
+                              src={
+                                previewImage ||
+                                addProductForm.getValues("image")
+                              }
+                              alt="Preview"
+                              className="h-full w-full object-cover"
                             />
-                          </FormControl>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => {
-                              setActiveTab("scan");
-                              setIsScanning(true);
-                            }}
-                          >
-                            <Barcode className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                            <button
+                              type="button"
+                              onClick={removeImage}
+                              className="absolute right-1 top-1 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </>
+                        ) : (
+                          <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center text-gray-500 hover:bg-gray-50">
+                            <Upload className="h-5 w-5" />
+                            <span className="mt-1 text-xs">Upload Image</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleImageChange}
+                            />
+                          </label>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        <p className="text-xs text-gray-400">
+                          JPG, PNG up to 2MB
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <TextField
+                  control={addProductForm.control}
+                  name="name"
+                  label="Product Name"
+                  placeholder="Enter product name"
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <TextField
+                    control={addProductForm.control}
+                    name="sku"
+                    label="SKU"
+                    placeholder="Enter SKU"
                   />
 
-                  <FormField
-                    control={form.control}
+                  <TextField
+                    control={addProductForm.control}
+                    name="barcode"
+                    label="Barcode"
+                    placeholder="Scan or enter barcode"
+                    rightIcon={<Barcode />}
+                    onClick={() => {
+                      setActiveTab("scan");
+                    }}
+                  />
+
+                  <SelectField
+                    control={addProductForm.control}
                     name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <FormControl>
-                          <CustomSelect
-                            value={field.value}
-                            onChange={field.onChange}
-                            options={categories.map((category) => ({
-                              value: category,
-                              label: category,
-                            }))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Category"
+                    placeholder="Enter Category"
+                    options={
+                      categoryData?.data?.map((category) => ({
+                        value: category.id,
+                        label: category.name,
+                      })) || []
+                    }
                   />
 
-                  <FormField
-                    control={form.control}
+                  <TextField
+                    control={addProductForm.control}
                     name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Price ($)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="0.00"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Price"
+                    placeholder="Enter price"
+                    type="number"
                   />
-
-                  <FormField
-                    control={form.control}
+                  <TextField
+                    control={addProductForm.control}
                     name="cost"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cost ($)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="0.00"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Cost"
+                    placeholder="Enter cost"
+                    type="number"
                   />
-
-                  <FormField
-                    control={form.control}
+                  <TextField
+                    control={addProductForm.control}
                     name="quantity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Quantity</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min="0"
-                            placeholder="0"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Quantity"
+                    placeholder="Enter quantity"
+                    type="number"
                   />
-
-                  <FormField
-                    control={form.control}
+                  <TextField
+                    control={addProductForm.control}
+                    name="minStockLevel"
+                    label="Min Stock Level"
+                    placeholder="Enter min stock level"
+                    type="number"
+                  />
+                  <SelectField
+                    control={addProductForm.control}
                     name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <FormControl>
-                          <CustomSelect
-                            value={field.value}
-                            onChange={field.onChange}
-                            options={[
-                              { value: "in_stock", label: "In Stock" },
-                              { value: "low_stock", label: "Low Stock" },
-                              {
-                                value: "out_of_stock",
-                                label: "Out of Stock",
-                              },
-                            ]}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Status"
+                    placeholder="Enter Status"
+                    options={[
+                      { value: "in_stock", label: "In Stock" },
+                      { value: "low_stock", label: "Low Stock" },
+                      {
+                        value: "out_of_stock",
+                        label: "Out of Stock",
+                      },
+                    ]}
                   />
                 </div>
+                <TextAreaField
+                  control={addProductForm.control}
+                  name="description"
+                  label="Description"
+                  placeholder="Enter description"
+                />
               </form>
             </Form>
           </TabsContent>
@@ -284,7 +221,10 @@ export function AddProductModal({
             <div className="flex flex-col items-center justify-center space-y-4 p-4">
               {isScanning ? (
                 <div className="w-full">
-                  <BarcodeScanner onScanComplete={handleScanComplete} />
+                  <BarcodeScanner
+                    onScan={handleScanComplete}
+                    onClose={() => setIsScanning(false)}
+                  />
                   <div className="mt-4 flex justify-center">
                     <Button
                       variant="outline"

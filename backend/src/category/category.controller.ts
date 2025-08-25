@@ -136,6 +136,32 @@ export class CategoryController {
     return ResponseHelper.success('Category updated successfully', category);
   }
 
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Toggle category active status' })
+  @ApiParam({ name: 'id', description: 'Category ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Category active status toggled successfully',
+    type: UpdateCategoryResponseDto,
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Category not found' })
+  async toggleActive(
+    @Param('id') id: string,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+    @Request() req,
+  ) {
+    const category = await this.categoryService.toggleActive(
+      id,
+      updateCategoryDto.isActive,
+      req.user,
+    );
+    return ResponseHelper.success(
+      'Category active status toggled successfully',
+      category,
+    );
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a category' })
   @ApiParam({ name: 'id', description: 'Category ID' })

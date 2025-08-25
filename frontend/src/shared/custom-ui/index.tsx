@@ -36,10 +36,20 @@ import { Label } from "@/components/ui/label";
 
 import { LucideIcon } from "lucide-react";
 import {
+  Control,
   FieldErrors,
   FieldValues,
+  Path,
   UseFormRegisterReturn,
 } from "react-hook-form";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
 
 interface DropdownMenuActionProps {
   trigger: ReactNode | string;
@@ -156,7 +166,9 @@ export const DropdownMenuAction = ({
         onClick={item.onClick}
         disabled={item.disabled}
         className={cn("flex items-center gap-2 font-medium cursor-pointer", {
-          "text-red-500": item.label?.toString().toLowerCase() === "log out",
+          "text-red-500":
+            item.label?.toString().toLowerCase() === "log out" ||
+            item.label?.toString().toLowerCase() === "delete",
         })}
       >
         {item.icon && <span className="w-4 h-4">{item.icon}</span>}
@@ -170,7 +182,9 @@ export const DropdownMenuAction = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild className={cn(className)}>
-        {trigger}
+        <Button variant="ghost" size="icon">
+          {trigger}
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align={align}
@@ -214,13 +228,14 @@ export function CustomSelect({
 }
 
 interface FormActionsProps {
-  onCancel: () => void;
-  onSubmit: () => void;
+  onCancel?: () => void;
+  onSubmit?: () => void;
   isLoading?: boolean;
   submitLabel?: string;
   cancelLabel?: string;
   showCancel?: boolean;
   children?: ReactNode;
+  className?: string;
 }
 
 export function FormActions({
@@ -231,9 +246,10 @@ export function FormActions({
   cancelLabel = "Cancel",
   showCancel = true,
   children,
+  className,
 }: FormActionsProps) {
   return (
-    <div className="flex items-center justify-end gap-2 pt-4">
+    <div className={cn("flex items-center justify-end gap-2 pt-4", className)}>
       {showCancel && (
         <Button
           type="button"
@@ -262,7 +278,7 @@ export function FormActions({
 interface FormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit?: () => void;
   title: string;
   description?: string;
   children: ReactNode;
@@ -292,7 +308,7 @@ export function CustomModal({
   isLoading = false,
   submitLabel = "Submit",
   cancelLabel = "Cancel",
-  showCancel = true,
+  showCancel = false,
   size = "md",
   className = "",
 }: FormModalProps) {
@@ -325,16 +341,18 @@ export function CustomModal({
                 {cancelLabel}
               </Button>
             )}
-            <Button type="submit" onClick={onSubmit} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                submitLabel
-              )}
-            </Button>
+            {onSubmit && (
+              <Button type="submit" onClick={onSubmit} disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  submitLabel
+                )}
+              </Button>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>
@@ -353,6 +371,25 @@ interface CustomInputProps {
   className?: string;
   required?: boolean;
   disabled?: boolean;
+}
+
+interface TextFieldProps<T extends FieldValues> {
+  control: Control<T>;
+  name: Path<T>;
+  label?: string;
+  placeholder?: string;
+  type?: string;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  onClick?: () => void;
+}
+
+interface SelectFieldProps<T extends FieldValues> {
+  control: Control<T>;
+  name: Path<T>;
+  label?: string;
+  placeholder?: string;
+  options: Array<{ label: string; value: string }>;
 }
 
 export function CustomInput({
@@ -422,12 +459,14 @@ export function CustomInput({
 
 export function CustomButton({
   label,
+  type = "button",
   onClick,
   disabled,
   isLoading = false,
   className = "bg-blue-600 text-white",
 }: {
   label: string;
+  type?: "button" | "submit" | "reset";
   onClick?: () => void;
   disabled?: boolean;
   isLoading?: boolean;
@@ -435,6 +474,7 @@ export function CustomButton({
 }) {
   return (
     <Button
+      type={type}
       onClick={onClick}
       disabled={disabled || isLoading}
       className={cn(
@@ -446,5 +486,114 @@ export function CustomButton({
       {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
       {label}
     </Button>
+  );
+}
+
+export function TextField<T extends FieldValues>({
+  control,
+  type = "text",
+  name,
+  label = "",
+  placeholder = "",
+  leftIcon,
+  rightIcon,
+  onClick,
+}: TextFieldProps<T>) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <div className="relative">
+              {leftIcon && (
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  {leftIcon}
+                </div>
+              )}
+              <Input
+                type={type}
+                min={0}
+                placeholder={placeholder}
+                className={cn({
+                  "pl-10": leftIcon,
+                  "pr-10": rightIcon,
+                })}
+                {...field}
+              />
+              {rightIcon && (
+                <div
+                  className={`${cn(
+                    "absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground ",
+                    onClick ? "cursor-pointer" : ""
+                  )}`}
+                  onClick={onClick}
+                >
+                  {rightIcon}
+                </div>
+              )}
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+export function TextAreaField<T extends FieldValues>({
+  control,
+  name,
+  label = "",
+  placeholder = "",
+}: TextFieldProps<T>) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Textarea
+              placeholder={placeholder}
+              {...field}
+              className="resize-none"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+export function SelectField<T extends FieldValues>({
+  control,
+  name,
+  label = "",
+  placeholder = "",
+  options,
+}: SelectFieldProps<T>) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <CustomSelect
+              {...field}
+              options={options}
+              placeholder={placeholder}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 }

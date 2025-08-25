@@ -5,14 +5,21 @@ import {
   IsOptional,
   IsUUID,
   Min,
+  IsEnum,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { InventoryStatus } from './inventory-response.dto';
 
 export class CreateItemDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  image: string;
 
   @ApiProperty()
   @IsString()
@@ -29,6 +36,12 @@ export class CreateItemDto {
   @Min(0)
   @IsNumber()
   @IsNotEmpty()
+  cost: number;
+
+  @ApiProperty()
+  @Min(0)
+  @IsNumber()
+  @IsNotEmpty()
   price: number;
 
   @ApiProperty()
@@ -39,17 +52,25 @@ export class CreateItemDto {
   @ApiProperty()
   @Min(0)
   @IsNumber()
-  @IsOptional()
   minStockLevel?: number;
 
   @ApiProperty()
-  @Min(0)
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  maxStockLevel?: number;
+  barcode?: string;
+
+  // @ApiProperty()
+  // @IsNumber()
+  // @IsOptional()
+  // maxStockLevel?: number;
 
   @ApiProperty()
   @IsUUID()
   @IsOptional()
   categoryId?: string;
+
+  @ApiProperty({ enum: InventoryStatus, enumName: 'InventoryStatus' })
+  @IsOptional()
+  @IsEnum(InventoryStatus)
+  status?: InventoryStatus;
 }

@@ -1,9 +1,9 @@
-import { Category } from "./types";
 import { CategoryCard } from "./category-card";
+import { CategoryResponseDtoWithoutCreatedBy } from "@/redux/services/category-api";
 
 interface CategoriesGridProps {
-  categories: Category[];
-  onEdit: (id: string) => void;
+  categories: CategoryResponseDtoWithoutCreatedBy[];
+  onEdit: () => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string, isActive: boolean) => void;
 }

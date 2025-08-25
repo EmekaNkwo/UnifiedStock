@@ -1,5 +1,6 @@
 "use client";
 import { getTenant } from "@/lib/tenant-utils";
+import { Spinner } from "@/shared/custom-ui/spinner";
 import { notFound, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -33,7 +34,7 @@ export default function TenantLayout({
   }, [params.tenant, router]);
 
   if (isLoading) {
-    return <div>Loading...</div>; // Or your custom loading component
+    return <Spinner label="Loading..." />;
   }
 
   return <>{children}</>;

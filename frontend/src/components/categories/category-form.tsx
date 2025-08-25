@@ -1,76 +1,81 @@
+"use client";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Category } from "./types";
+
+import { Form } from "@/components/ui/form";
+
+import { CategoryFormValues } from "@/shared/zod-schema";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-
-const categoryFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  description: z.string().optional(),
-});
-
-type CategoryFormValues = z.infer<typeof categoryFormSchema>;
+  FormActions,
+  SelectField,
+  TextAreaField,
+  TextField,
+} from "@/shared/custom-ui";
+import { CategoryResponseDtoWithoutCreatedBy } from "@/redux/services/category-api";
 
 interface CategoryFormProps {
-  initialData?: Partial<Category>;
+  form: ReturnType<typeof useForm<CategoryFormValues>>;
   onSubmit: (data: CategoryFormValues) => void;
   isLoading?: boolean;
+  onCancel?: () => void;
+  isEditMode?: boolean;
+  categories?: CategoryResponseDtoWithoutCreatedBy[];
 }
 
 export function CategoryForm({
-  initialData,
-  onSubmit,
+  form,
   isLoading = false,
+  onCancel,
+  onSubmit,
+  isEditMode,
+  categories,
 }: CategoryFormProps) {
-  const form = useForm<CategoryFormValues>({
-    resolver: zodResolver(categoryFormSchema),
-    defaultValues: {
-      name: initialData?.name || "",
-      description: initialData?.description || "",
-    },
-  });
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
+      <form className="space-y-4">
+        <TextField
           control={form.control}
           name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Category name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Name"
+          placeholder="Category name"
         />
-        <FormField
+        <TextAreaField
           control={form.control}
           name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description (Optional)</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Category description"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Description "
+          placeholder="Category description"
+        />
+
+        <SelectField
+          control={form.control}
+          name="parentId"
+          label="Parent Category"
+          placeholder="Select parent category"
+          options={
+            categories?.map((category) => ({
+              value: category.id,
+              label: category.name,
+            })) || []
+          }
+        />
+        <SelectField
+          control={form.control}
+          name="isActive"
+          label="Active"
+          placeholder="Select active status"
+          options={[
+            { value: "true", label: "Active" },
+            { value: "false", label: "Inactive" },
+          ]}
+        />
+
+        <FormActions
+          className="mt-4"
+          isLoading={isLoading}
+          onSubmit={form.handleSubmit(onSubmit)}
+          onCancel={onCancel}
+          submitLabel={isEditMode ? "Update Category" : "Save Category"}
+          cancelLabel="Close"
+          showCancel
         />
       </form>
     </Form>

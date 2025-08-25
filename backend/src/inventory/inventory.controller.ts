@@ -8,6 +8,7 @@ import {
   Delete,
   Request,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -20,9 +21,12 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { ResponseHelper } from '../common/helpers/response.helper';
 import {
+  InventoryDto,
+  InventoryItemResponseDto,
   InventoryResponseDto,
   StockCheckDto,
 } from './dto/inventory-response.dto';
@@ -52,14 +56,34 @@ export class InventoryController {
 
   @Get()
   @ApiOperation({ summary: 'Get all inventory items for the tenant' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 10)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Items retrieved successfully',
-    type: [InventoryResponseDto],
+    type: InventoryDto,
   })
-  async findAll(@Request() req) {
-    const items = await this.inventoryService.findAll(req.user.tenantId);
-    return ResponseHelper.success('Items retrieved successfully', items);
+  async findAll(
+    @Request() req,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    const result = await this.inventoryService.findAll(
+      req.user.tenantId,
+      Number(page),
+      Number(limit),
+    );
+    return ResponseHelper.success('Items retrieved successfully', result);
   }
 
   @Get(':id')
@@ -68,7 +92,7 @@ export class InventoryController {
   @ApiResponse({
     status: 200,
     description: 'Item retrieved successfully',
-    type: InventoryResponseDto,
+    type: InventoryItemResponseDto,
   })
   async findOne(@Param('id') id: string, @Request() req) {
     const item = await this.inventoryService.findOne(id, req.user.tenantId);
@@ -85,7 +109,7 @@ export class InventoryController {
   })
   async update(
     @Param('id') id: string,
-    @Body() updateItemDto: UpdateItemDto,
+    @Body() updateItemDto: CreateItemDto,
     @Request() req,
   ) {
     const item = await this.inventoryService.update(
@@ -104,6 +128,19 @@ export class InventoryController {
   async remove(@Param('id') id: string, @Request() req) {
     await this.inventoryService.remove(id, req.user.tenantId, req.user);
     return ResponseHelper.success('Item deleted successfully');
+  }
+
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Update the status of an inventory item' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Inventory item ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Item status updated successfully',
+    type: InventoryResponseDto,
+  })
+  async updateStatus(@Param('id') id: string, @Request() req) {
+    await this.inventoryService.updateStatus(id, req.user.tenantId, req.user);
+    return ResponseHelper.success('Item status updated successfully');
   }
 
   @Get('stock/check')

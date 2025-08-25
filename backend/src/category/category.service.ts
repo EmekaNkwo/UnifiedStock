@@ -29,6 +29,7 @@ export class CategoryService {
   ): Promise<Category> {
     const category = this.categoryRepository.create({
       ...createCategoryDto,
+      isActive: createCategoryDto.isActive ?? true,
       tenantId,
       createdBy: user,
       createdById: user.id,
@@ -47,16 +48,35 @@ export class CategoryService {
   }
 
   async findAll(tenantId: string, user: User): Promise<Category[]> {
-    // Regular users can only see categories from their tenant
     if (user.role !== Role.SUPER_ADMIN && user.tenantId !== tenantId) {
       throw ResponseHelper.forbidden('Access to this tenant is denied');
     }
 
-    return this.categoryRepository.find({
+    // First get all categories with their relations
+    const categories = await this.categoryRepository.find({
       where: { tenantId },
-      relations: ['parent', 'children'],
-      order: { name: 'ASC' },
+      relations: ['parent', 'children', 'items'],
+      order: { createdAt: 'ASC' },
     });
+
+    // Then get the item counts in a separate query
+    const categoriesWithCounts = await Promise.all(
+      categories.map(async (category) => {
+        const itemCount = await this.categoryRepository
+          .createQueryBuilder('category')
+          .leftJoin('category.items', 'items')
+          .where('category.id = :id', { id: category.id })
+          .select('COUNT(items.id)', 'count')
+          .getRawOne();
+
+        return {
+          ...category,
+          itemCount: parseInt(itemCount?.count || '0', 10),
+        };
+      }),
+    );
+
+    return categoriesWithCounts;
   }
 
   async findOne(id: string, tenantId: string, user: User): Promise<Category> {
@@ -110,6 +130,41 @@ export class CategoryService {
     });
 
     return this.categoryRepository.save(category);
+  }
+
+  async toggleActive(
+    id: string,
+    isActive: boolean,
+    user: User,
+  ): Promise<Category> {
+    // First get the category with items relation
+    const category = await this.categoryRepository.findOne({
+      where: { id },
+      relations: ['items'],
+    });
+
+    if (!category) {
+      throw ResponseHelper.notFound(`Category with ID ${id} not found`);
+    }
+
+    // Check admin access for the category's tenant
+    this.checkAdminAccess(user, category.tenantId);
+
+    // Prevent deactivating categories with active items
+    if (!isActive) {
+      const hasActiveItems = category.items?.some((item) => item.isActive);
+      if (hasActiveItems) {
+        throw ResponseHelper.badRequest(
+          'Cannot deactivate category with active items',
+        );
+      }
+    }
+
+    // Update and save the category
+    return this.categoryRepository.save({
+      ...category,
+      isActive,
+    });
   }
 
   async remove(id: string, tenantId: string, user: User): Promise<void> {

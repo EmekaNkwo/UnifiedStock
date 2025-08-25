@@ -1,55 +1,42 @@
-// src/components/products/barcode-scanner.tsx
+// src/components/barcode/BarcodeScanner.tsx
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { QrReader } from "react-qr-reader";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 interface BarcodeScannerProps {
-  onScanComplete: (code: string) => void;
+  onScan: (code: string) => void;
+  onClose: () => void;
 }
 
-export function BarcodeScanner({ onScanComplete }: BarcodeScannerProps) {
-  const scannerRef = useRef<Html5Qrcode | null>(null);
-  const scannerContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const scanBarcode = async () => {
-      try {
-        const scanner = new Html5Qrcode("barcode-scanner");
-        scannerRef.current = scanner;
-
-        await scanner.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-          },
-          (decodedText) => {
-            onScanComplete(decodedText);
-            scannerRef.current?.stop();
-          },
-          (errorMessage) => {
-            // Error handling is done in the console
-            console.log(errorMessage);
-          }
-        );
-      } catch (error) {
-        console.error("Error starting scanner:", error);
-      }
-    };
-
-    scanBarcode();
-
-    return () => {
-      if (scannerRef.current?.isScanning) {
-        scannerRef.current
-          .stop()
-          .catch((error) => console.error("Error stopping scanner:", error));
-      }
-    };
-  }, [onScanComplete]);
-
+export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
   return (
-    <div id="barcode-scanner" ref={scannerContainerRef} className="w-full" />
+    <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center p-4">
+      <div className="relative w-full max-w-lg bg-black rounded-lg overflow-hidden">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-2 z-10 bg-white/20 hover:bg-white/30 text-white"
+          onClick={onClose}
+        >
+          <X className="h-5 w-5" />
+        </Button>
+        <QrReader
+          constraints={{ facingMode: "environment" }}
+          onResult={(result, error) => {
+            if (result) {
+              onScan(result.getText());
+            }
+          }}
+          videoContainerStyle={{ width: "100%" }}
+          videoStyle={{ width: "100%" }}
+          scanDelay={300}
+        />
+      </div>
+      <p className="mt-4 text-white text-center">
+        Point your camera at a barcode to scan
+      </p>
+    </div>
   );
 }

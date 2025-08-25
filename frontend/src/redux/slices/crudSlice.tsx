@@ -4,7 +4,7 @@ import { RootState } from "../store";
 import { UserResponseDto } from "../services/auth-api";
 
 export type CrudState = {
-  elementId?: number;
+  elementId?: number | string;
   isEditMode?: boolean;
   record?: unknown;
   userProfile?: UserResponseDto;

@@ -21,7 +21,13 @@ const injectedRtkApi = api
         InventoryControllerFindAllApiResponse,
         InventoryControllerFindAllApiArg
       >({
-        query: () => ({ url: `/api/inventory` }),
+        query: (queryArg) => ({
+          url: `/api/inventory`,
+          params: {
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
         providesTags: ["inventory"],
       }),
       inventoryControllerFindOne: build.query<
@@ -38,7 +44,7 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/inventory/${queryArg.id}`,
           method: "PATCH",
-          body: queryArg.updateItemDto,
+          body: queryArg.createItemDto,
         }),
         invalidatesTags: ["inventory"],
       }),
@@ -49,6 +55,16 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/inventory/${queryArg.id}`,
           method: "DELETE",
+        }),
+        invalidatesTags: ["inventory"],
+      }),
+      inventoryControllerUpdateStatus: build.mutation<
+        InventoryControllerUpdateStatusApiResponse,
+        InventoryControllerUpdateStatusApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/inventory/${queryArg.id}/status`,
+          method: "PATCH",
         }),
         invalidatesTags: ["inventory"],
       }),
@@ -69,10 +85,15 @@ export type InventoryControllerCreateApiArg = {
   createItemDto: CreateItemDto;
 };
 export type InventoryControllerFindAllApiResponse =
-  /** status 200 Items retrieved successfully */ InventoryResponseDto[];
-export type InventoryControllerFindAllApiArg = void;
+  /** status 200 Items retrieved successfully */ InventoryDto;
+export type InventoryControllerFindAllApiArg = {
+  /** Page number (default: 1) */
+  page?: number;
+  /** Items per page (default: 10) */
+  limit?: number;
+};
 export type InventoryControllerFindOneApiResponse =
-  /** status 200 Item retrieved successfully */ InventoryResponseDto;
+  /** status 200 Item retrieved successfully */ InventoryItemResponseDto;
 export type InventoryControllerFindOneApiArg = {
   /** Inventory item ID */
   id: string;
@@ -82,46 +103,79 @@ export type InventoryControllerUpdateApiResponse =
 export type InventoryControllerUpdateApiArg = {
   /** Inventory item ID */
   id: string;
-  updateItemDto: UpdateItemDto;
+  createItemDto: CreateItemDto;
 };
 export type InventoryControllerRemoveApiResponse = unknown;
 export type InventoryControllerRemoveApiArg = {
   /** Inventory item ID */
   id: string;
 };
+export type InventoryControllerUpdateStatusApiResponse =
+  /** status 200 Item status updated successfully */ InventoryResponseDto;
+export type InventoryControllerUpdateStatusApiArg = {
+  /** Inventory item ID */
+  id: string;
+};
 export type InventoryControllerCheckStockLevelsApiResponse =
   /** status 200 Stock levels checked successfully */ StockCheckDto;
 export type InventoryControllerCheckStockLevelsApiArg = void;
+export type InventoryStatus = "in_stock" | "low_stock" | "out_of_stock";
+export type SimpleCategoryDto = {
+  id: string;
+  name: string;
+  isActive: boolean;
+};
 export type InventoryResponseDto = {
   id: string;
   name: string;
+  image: string;
   description: string;
   quantity: number;
   price: number;
+  cost: number;
   sku: string;
+  isActive: boolean;
+  status: InventoryStatus;
   minStockLevel: number;
+  barcode: string;
   categoryId: string;
   createdAt: string;
   updatedAt: string;
+  category: SimpleCategoryDto | null;
 };
 export type CreateItemDto = {
   name: string;
+  image: string;
   description: string;
   quantity: number;
+  cost: number;
   price: number;
   sku: string;
   minStockLevel: number;
-  maxStockLevel: number;
+  barcode: string;
   categoryId: string;
+  status: InventoryStatus;
 };
-export type UpdateItemDto = {
+export type InventoryDto = {
+  data: InventoryResponseDto[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type InventoryItemResponseDto = {
+  id: string;
   name: string;
   quantity: number;
   price: number;
+  tenantId: string;
   sku: string;
-  minStockLevel: number;
-  maxStockLevel: number;
   categoryId: string;
+  minStockLevel: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  category: SimpleCategoryDto | null;
 };
 export type StockCheckDto = {
   lowStock: InventoryResponseDto[];
@@ -132,5 +186,6 @@ export const {
   useInventoryControllerFindOneQuery,
   useInventoryControllerUpdateMutation,
   useInventoryControllerRemoveMutation,
+  useInventoryControllerUpdateStatusMutation,
   useInventoryControllerCheckStockLevelsQuery,
 } = injectedRtkApi;

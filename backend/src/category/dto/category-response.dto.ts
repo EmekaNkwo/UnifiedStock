@@ -15,6 +15,9 @@ export class CategoryResponseDto {
   tenantId: string;
 
   @ApiProperty()
+  isActive: boolean;
+
+  @ApiProperty()
   parent?: CategoryResponseDto;
 
   @ApiProperty()
@@ -22,6 +25,9 @@ export class CategoryResponseDto {
 
   @ApiProperty({ type: () => [CategoryResponseDto] })
   children?: CategoryResponseDto[];
+
+  @ApiProperty()
+  itemCount: number;
 
   @ApiProperty()
   createdAt: Date;

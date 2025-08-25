@@ -24,6 +24,9 @@ export class Category {
   @Column()
   tenantId: string;
 
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
+
   @ManyToOne(() => Category, (category) => category.children, {
     nullable: true,
   })

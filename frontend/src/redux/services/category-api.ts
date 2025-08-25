@@ -59,6 +59,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["categories"],
       }),
+      categoryControllerToggleActive: build.mutation<
+        CategoryControllerToggleActiveApiResponse,
+        CategoryControllerToggleActiveApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/categories/${queryArg.id}/status`,
+          method: "PATCH",
+          body: queryArg.updateCategoryDto,
+        }),
+        invalidatesTags: ["categories"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -92,6 +103,13 @@ export type CategoryControllerRemoveApiArg = {
   /** Category ID */
   id: string;
 };
+export type CategoryControllerToggleActiveApiResponse =
+  /** status 200 Category active status toggled successfully */ UpdateCategoryResponseDto;
+export type CategoryControllerToggleActiveApiArg = {
+  /** Category ID */
+  id: string;
+  updateCategoryDto: UpdateCategoryDto;
+};
 export type UserResponseWithTenantIdDto = {
   id: string;
   username: string;
@@ -103,9 +121,11 @@ export type CategoryResponseDto = {
   name: string;
   description: string;
   tenantId: string;
+  isActive: boolean;
   parent: CategoryResponseDto;
   parentId: string;
   children: CategoryResponseDto[];
+  itemCount: number;
   createdAt: string;
   updatedAt: string;
   createdById: string;
@@ -114,16 +134,19 @@ export type CategoryResponseDto = {
 export type CreateCategoryDto = {
   name: string;
   description: string;
-  parentId: string;
+  parentId?: string;
+  isActive: boolean;
 };
 export type CategoryResponseDtoWithoutCreatedBy = {
   id: string;
   name: string;
   description: string;
   tenantId: string;
+  isActive: boolean;
   parent: CategoryResponseDto;
   parentId: string;
   children: CategoryResponseDto[];
+  itemCount: number;
   createdAt: string;
   updatedAt: string;
   createdById: string;
@@ -144,9 +167,11 @@ export type UpdateCategoryResponseDto = {
   name: string;
   description: string;
   tenantId: string;
+  isActive: boolean;
   parent: CategoryResponseDto;
   parentId: string;
   children: CategoryResponseDto[];
+  itemCount: number;
   createdAt: string;
   updatedAt: string;
   createdById: string;
@@ -157,6 +182,7 @@ export type UpdateCategoryDto = {
   name?: string;
   description?: string;
   parentId?: string;
+  isActive?: boolean;
 };
 export const {
   useCategoryControllerCreateMutation,
@@ -165,4 +191,5 @@ export const {
   useCategoryControllerFindOneQuery,
   useCategoryControllerUpdateMutation,
   useCategoryControllerRemoveMutation,
+  useCategoryControllerToggleActiveMutation,
 } = injectedRtkApi;

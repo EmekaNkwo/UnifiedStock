@@ -8,11 +8,18 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { InventoryStatus } from '../dto/inventory-response.dto';
 
 @Entity()
 export class InventoryItem {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ nullable: true })
+  description: string;
+
+  @Column({ nullable: true })
+  image: string;
 
   @Column()
   name: string;
@@ -22,6 +29,9 @@ export class InventoryItem {
 
   @Column('decimal')
   price: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  cost: number;
 
   @Column()
   tenantId: string;
@@ -40,6 +50,19 @@ export class InventoryItem {
 
   @Column({ type: 'decimal', nullable: true })
   minStockLevel: number;
+
+  @Column({ nullable: true })
+  barcode: string;
+
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: InventoryStatus,
+    default: InventoryStatus.IN_STOCK,
+  })
+  status: InventoryStatus;
 
   @CreateDateColumn()
   createdAt: Date;

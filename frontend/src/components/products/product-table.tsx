@@ -1,10 +1,19 @@
-// src/components/products/ProductTable.tsx
+"use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { Product } from "./types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { DataTable } from "@/shared/custom-ui/data-table";
-import { mockCategories } from "./mockData";
+import { InventoryResponseDto } from "@/redux/services/inventory-api";
+
+import { DropdownMenuAction } from "@/shared/custom-ui";
+import {
+  EllipsisVertical,
+  Pencil,
+  ToggleLeft,
+  ToggleRight,
+  Trash,
+} from "lucide-react";
+import { useCrud } from "@/hooks/use-crud";
 
 const statusVariantMap = {
   in_stock: "default",
@@ -18,95 +27,126 @@ const statusTextMap = {
   out_of_stock: "Out of Stock",
 } as const;
 
-export const columns: ColumnDef<Product>[] = [
-  {
-    accessorKey: "name",
-    header: "Product Name",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        {row.original.image && (
-          <img
-            src={row.original.image}
-            alt={row.original.name}
-            className="h-10 w-10 rounded-md object-cover"
-          />
-        )}
-        <div>
-          <div className="font-medium">{row.original.name}</div>
-          <div className="text-xs text-muted-foreground">
-            {row.original.sku}
-          </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "category",
-    header: "Category",
-  },
-  {
-    accessorKey: "price",
-    header: "Price",
-    cell: ({ row }) => `$${row.original.price.toFixed(2)}`,
-  },
-  {
-    accessorKey: "cost",
-    header: "Cost",
-    cell: ({ row }) => `$${row.original.cost.toFixed(2)}`,
-  },
-  {
-    accessorKey: "quantity",
-    header: "Quantity",
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <Badge variant={statusVariantMap[row.original.status]}>
-        {statusTextMap[row.original.status]}
-      </Badge>
-    ),
-  },
-  {
-    accessorKey: "lastUpdated",
-    header: "Last Updated",
-    cell: ({ row }) =>
-      format(new Date(row.original.lastUpdated), "MMM d, yyyy"),
-  },
-];
-
 interface ProductTableProps {
-  data: Product[];
+  data: InventoryResponseDto[];
   isLoading?: boolean;
+  total?: number;
+  onEdit?: () => void;
+  onDelete?: (id: string) => void;
 }
 
-export function ProductTable({ data, isLoading = false }: ProductTableProps) {
+export function ProductTable({
+  data,
+  isLoading = false,
+  total,
+  onEdit,
+  onDelete,
+}: ProductTableProps) {
+  const { setCrudState } = useCrud();
+
+  const columns: ColumnDef<InventoryResponseDto>[] = [
+    {
+      accessorKey: "name",
+      header: "Product Name",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          {row.original.image && (
+            <img
+              src={row.original?.image}
+              alt={row.original?.name}
+              className="h-10 w-10 rounded-md object-cover"
+            />
+          )}
+          <div>
+            <div className="font-medium">{row.original?.name}</div>
+            <div className="text-xs text-muted-foreground">
+              {row.original?.sku}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "category",
+      header: "Category",
+      cell: ({ row }) => row.original?.category?.name,
+    },
+    {
+      accessorKey: "price",
+      header: "Price",
+      // cell: ({ row }) => `$${row.original?.price?.toFixed(2)}`,
+    },
+    {
+      accessorKey: "cost",
+      header: "Cost",
+      // cell: ({ row }) => `$${row.original?.cost?.toFixed(2)}`,
+    },
+    {
+      accessorKey: "quantity",
+      header: "Quantity",
+    },
+    {
+      accessorKey: "minStockLevel",
+      header: "Min Stock Level",
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) =>
+        row.original?.status && (
+          <Badge variant={statusVariantMap[row.original?.status]}>
+            {statusTextMap[row.original?.status]}
+          </Badge>
+        ),
+    },
+    {
+      accessorKey: "updatedAt",
+      header: "Last Updated",
+      cell: ({ row }) =>
+        row.original?.updatedAt &&
+        format(new Date(row.original?.updatedAt), "MMM d, yyyy"),
+    },
+    {
+      header: "Action",
+      cell: ({ row }) => (
+        <DropdownMenuAction
+          trigger={<EllipsisVertical />}
+          items={[
+            {
+              icon: <Pencil />,
+              label: "Edit",
+              onClick: () => {
+                setCrudState({
+                  record: row.original,
+                  isEditMode: true,
+                  elementId: row.original.id,
+                });
+                onEdit?.();
+              },
+            },
+            {
+              icon: row.original.isActive ? <ToggleLeft /> : <ToggleRight />,
+              label: row.original.isActive ? "Deactivate" : "Activate",
+              onClick: () => onDelete?.(row.original.id),
+            },
+            {
+              icon: <Trash className="text-red-500" />,
+
+              label: "Delete",
+              onClick: () => onDelete?.(row.original.id),
+            },
+          ]}
+        />
+      ),
+    },
+  ];
   return (
-    <DataTable
+    <DataTable<InventoryResponseDto>
       columns={columns}
       data={data}
       isLoading={isLoading}
       showPagination
-
-      //   filterOptions={[
-      //     {
-      //       accessorKey: "status",
-      //       title: "Status",
-      //       options: [
-      //         { label: "In Stock", value: "in_stock" },
-      //         { label: "Low Stock", value: "low_stock" },
-      //         { label: "Out of Stock", value: "out_of_stock" },
-      //       ],
-      //     },
-      //     {
-      //       accessorKey: "category",
-      //       title: "Category",
-      //       options: mockCategories.map((category) => ({
-      //         label: category,
-      //         value: category,
-      //       })),
-      //     },
-      //   ]}
+      total={total || 0}
     />
   );
 }

@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsUUID,
+  IsBoolean,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCategoryDto {
@@ -15,5 +21,10 @@ export class CreateCategoryDto {
   @IsUUID()
   @IsOptional()
   @ApiProperty()
-  parentId?: string;
+  parentId?: string | null;
+
+  @IsBoolean()
+  @IsOptional()
+  @ApiProperty()
+  isActive?: boolean;
 }

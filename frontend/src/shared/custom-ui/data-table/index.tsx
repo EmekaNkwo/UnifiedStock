@@ -12,13 +12,13 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   PaginationState,
   useReactTable,
 } from "@tanstack/react-table";
 import React, { useEffect, useState } from "react";
 import { DataTablePagination } from "./data-table-pagination";
 import { AlertCircle } from "lucide-react";
+import { useTable } from "@/hooks/use-table";
 
 export const EmptyState = () => (
   <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
@@ -27,17 +27,18 @@ export const EmptyState = () => (
   </div>
 );
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
+interface DataTableProps<T> {
+  columns: ColumnDef<T, unknown>[];
+  data: T[];
   showPagination?: boolean;
   isLoading?: boolean;
   expandable?: boolean;
-  expandedChildren?: (row: TData) => React.ReactNode;
+  expandedChildren?: (row: T) => React.ReactNode;
   expandedRows?: Record<string, boolean>;
+  total: number;
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<T>({
   columns,
   data,
   showPagination,
@@ -45,24 +46,31 @@ export function DataTable<TData, TValue>({
   expandable = false,
   expandedChildren,
   expandedRows,
-}: DataTableProps<TData, TValue>) {
+
+  total,
+}: DataTableProps<T>) {
+  const { updateTableState } = useTable();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
 
-  // Reset to first page whenever data changes
   useEffect(() => {
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  }, [data.length]);
+    updateTableState({
+      pageSize: pagination.pageSize,
+      pageNumber: pagination.pageIndex,
+    });
+  }, [pagination]);
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: true,
+    pageCount: Math.ceil(total / data.length / pagination.pageSize),
     state: {
       pagination,
     },
+    rowCount: total || data.length,
     onPaginationChange: setPagination,
   });
 

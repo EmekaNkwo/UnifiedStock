@@ -11,7 +11,7 @@ export type UseCrudReturn = {
   setCrudState: (payload: Partial<ReturnType<typeof selectCrudState>>) => void;
   clearCrudState: () => void;
   isEditMode: boolean;
-  elementId: number | undefined;
+  elementId: string | number | undefined;
   record: unknown;
   identifier: string | undefined;
 };

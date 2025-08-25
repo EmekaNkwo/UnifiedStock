@@ -21,12 +21,18 @@ export class ResponseHelper {
     data?: T,
     statusCode: number = HttpStatus.OK,
   ): SuccessResponse<T> {
-    return {
+    const response: SuccessResponse<T> = {
       success: true,
       statusCode,
       message,
-      ...data,
     };
+
+    // Only add data if it's not undefined
+    if (data !== undefined) {
+      response.data = data;
+    }
+
+    return response;
   }
 
   static error(

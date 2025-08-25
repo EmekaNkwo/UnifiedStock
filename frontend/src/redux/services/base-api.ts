@@ -4,6 +4,13 @@ import {
   fetchBaseQuery,
 } from "@reduxjs/toolkit/query/react";
 
+interface BackendResponse<T> {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data?: T;
+}
+
 const BaseQuery: BaseQueryFn = async (args, api, extraOptions) => {
   const baseUrl = process.env.NEXT_PUBLIC_APP_API_SERVICE_BASE_URL;
   const result = await fetchBaseQuery({
@@ -16,6 +23,29 @@ const BaseQuery: BaseQueryFn = async (args, api, extraOptions) => {
       return headers;
     },
   })(args, api, extraOptions);
+
+  if (result.error?.status === 401) {
+    localStorage.removeItem("accessToken");
+    window.location.href = "/login";
+  }
+
+  if (result.error) {
+    return {
+      error: {
+        status: result.error.status,
+        data: result.error.data || "An error occurred",
+      },
+    };
+  }
+
+  // Handle successful responses
+  const response = result.data as BackendResponse<unknown>;
+
+  // If the response follows our standard format and has data, return the data
+  if (response && typeof response === "object" && "data" in response) {
+    return { data: response.data };
+  }
+
   return result;
 };
 

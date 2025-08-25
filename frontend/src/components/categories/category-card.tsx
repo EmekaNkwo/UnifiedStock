@@ -1,11 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Category } from "./types";
+import { useCrud } from "@/hooks/use-crud";
+import { CategoryResponseDtoWithoutCreatedBy } from "@/redux/services/category-api";
 import { Edit, Trash2 } from "lucide-react";
 
 interface CategoryCardProps {
-  category: Category;
-  onEdit: (id: string) => void;
+  category: CategoryResponseDtoWithoutCreatedBy;
+  onEdit: () => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string, isActive: boolean) => void;
 }
@@ -16,6 +17,7 @@ export function CategoryCard({
   onDelete,
   onToggleStatus,
 }: CategoryCardProps) {
+  const { setCrudState } = useCrud();
   return (
     <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start">
@@ -26,7 +28,7 @@ export function CategoryCard({
           </p>
           <div className="mt-2 flex items-center gap-2">
             <Badge variant="outline" className="text-xs">
-              {category.productCount} products
+              {category.itemCount || 0} products
             </Badge>
             <Badge variant={category.isActive ? "default" : "secondary"}>
               {category.isActive ? "Active" : "Inactive"}
@@ -37,7 +39,14 @@ export function CategoryCard({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onEdit(category.id)}
+            onClick={() => {
+              setCrudState({
+                elementId: category.id,
+                isEditMode: true,
+                record: category,
+              });
+              onEdit();
+            }}
             className="h-8 w-8"
           >
             <Edit className="h-4 w-4" />
